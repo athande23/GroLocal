@@ -7,8 +7,8 @@ export function Card({
 }: ComponentPropsWithoutRef<"div"> & { hover?: boolean }) {
   return (
     <div
-      className={`bg-fill border border-line rounded-lg p-5 ${
-        hover ? "transition-colors duration-150 hover:border-green" : ""
+      className={`bg-fill border border-line rounded-lg p-5 sm:p-6 ${
+        hover ? "transition-all duration-200 hover:border-green hover:shadow-md hover:bg-green-soft/30" : ""
       } ${className}`}
       {...props}
     />

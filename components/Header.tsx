@@ -17,11 +17,11 @@ export default async function Header() {
 
   return (
     <header className="sticky top-0 z-[1000] border-b border-line bg-paper">
-      <div className="mx-auto flex h-14 max-w-[1080px] items-center justify-between gap-4 px-5">
-        <div className="flex min-w-0 items-center gap-8">
+      <div className="mx-auto flex h-14 sm:h-16 max-w-[1200px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 items-center gap-6 sm:gap-8">
           <Link
             href="/"
-            className="font-[family-name:var(--font-display)] text-[20px] font-semibold text-ink"
+            className="font-[family-name:var(--font-display)] text-lg sm:text-xl font-semibold text-ink hover:text-green transition-colors"
           >
             GroLocal
           </Link>
@@ -31,9 +31,9 @@ export default async function Header() {
 
         <Link
           href="/profile"
-          className="flex shrink-0 items-center gap-2 rounded-md border border-line bg-fill px-3 py-1.5 text-[14px] font-medium text-ink transition-colors duration-150 hover:border-green hover:bg-green-soft"
+          className="flex shrink-0 items-center gap-2 rounded-md border border-line bg-fill px-3 py-1.5 sm:py-2 text-sm sm:text-base font-medium text-ink transition-all duration-200 hover:border-green hover:bg-green-soft/60 hover:shadow-sm"
         >
-          <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-paper text-[12px] font-semibold text-green">
+          <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-paper text-xs sm:text-sm font-semibold text-green">
             {user?.avatarData ? (
               <img
                 src={user.avatarData}

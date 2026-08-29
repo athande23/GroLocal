@@ -10,14 +10,14 @@ export function ListingTag({
 }) {
   if (type === "SELL") {
     return (
-      <span className="text-[13px] font-medium text-ink">
+      <span className="text-sm font-medium text-ink">
         {price != null ? `$${price % 1 === 0 ? price : price.toFixed(2)}` : "For sale"}
       </span>
     );
   }
   if (type === "SWAP") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-graphite">
+      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-graphite">
         <span
           aria-hidden
           className="h-2 w-2 rounded-full border-2 border-green bg-transparent"
@@ -27,7 +27,7 @@ export function ListingTag({
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-graphite">
+    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-graphite">
       <span aria-hidden className="h-2 w-2 rounded-full bg-green" />
       Free
     </span>
@@ -36,7 +36,7 @@ export function ListingTag({
 
 export function HeritageTag({ heritage }: { heritage: string }) {
   return (
-    <span className="inline-flex items-center rounded-md bg-green-soft px-2 py-0.5 text-[13px] font-medium text-green">
+    <span className="inline-flex items-center rounded-md bg-green-soft px-3 py-1 text-sm font-medium text-green transition-all duration-200">
       {heritage}
     </span>
   );
@@ -44,7 +44,7 @@ export function HeritageTag({ heritage }: { heritage: string }) {
 
 export function CategoryTag({ category }: { category: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-graphite capitalize">
+    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-graphite capitalize">
       <span aria-hidden className="h-2 w-2 rounded-full bg-green" />
       {category}
     </span>
