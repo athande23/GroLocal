@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Source_Serif_4 } from "next/font/google";
 import Header from "@/components/Header";
+import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 const inter = Inter({
