@@ -43,6 +43,7 @@ export default async function MarketPage({
     swapFor: l.swapFor,
     quantity: l.quantity,
     imageData: l.imageData,
+    plantImageUrl: l.plant?.imageUrl ?? null,
     claimed: l.claimed,
 
     plantName: l.plant?.commonName ?? null,

@@ -113,29 +113,31 @@ export default async function Home() {
       </section>
 
       {/* Growing near you */}
-      <section className="border-t border-line py-12 sm:py-14 md:py-16">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-semibold leading-tight text-ink">
+      <section className="border-t border-line py-12">
+        <h2 className="font-[family-name:var(--font-display)] text-[24px] font-semibold leading-8 text-ink">
           Growing near you
         </h2>
-
-        <div className="scroll-row -mx-1 mt-6 sm:mt-8 flex gap-4 overflow-x-auto px-1 pb-2">
+        <div className="scroll-row -mx-1 mt-6 flex gap-4 overflow-x-auto px-1 pb-2">
           {plantsNearYou.map((p) => (
             <Link
               key={p.id}
               href={`/market?q=${encodeURIComponent(p.commonName)}`}
-              className="group w-44 shrink-0 rounded-lg border border-line bg-fill p-4 transition-all duration-200 hover:border-green hover:shadow-md hover:bg-green-soft/40"
+              className="w-44 shrink-0 rounded-lg border border-line bg-fill p-4 transition-colors duration-150 hover:border-green"
             >
-              <PlantTile name={p.commonName} size="md" />
-
-              <p className="mt-3 text-base sm:text-lg font-semibold leading-snug text-ink group-hover:text-green transition-colors">
+              {p.imageUrl ? (
+                <img
+                  src={p.imageUrl}
+                  alt={p.commonName}
+                  className="h-14 w-14 rounded-lg border border-line object-cover"
+                />
+              ) : (
+                <PlantTile name={p.commonName} size="md" />
+              )}
+              <p className="mt-3 text-[16px] font-semibold leading-[22px] text-ink">
                 {p.commonName}
               </p>
-
-              <p className="mt-1 text-xs sm:text-sm text-graphite">
-                {p.origin}
-              </p>
-
-              <p className="mt-2 text-xs sm:text-sm text-graphite">
+              <p className="mt-0.5 text-[13px] text-graphite">{p.origin}</p>
+              <p className="mt-2 text-[13px] text-graphite">
                 {p._count.gardenPlants} gardener
                 {p._count.gardenPlants === 1 ? "" : "s"} nearby
               </p>

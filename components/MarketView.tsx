@@ -23,6 +23,7 @@ export type MarketListing = {
   swapFor: string | null;
   quantity: string;
   imageData: string | null;
+  plantImageUrl: string | null;
   claimed: boolean;
   plantName: string | null;
   gardenerId: string;
@@ -343,9 +344,13 @@ export default function MarketView({
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                {l.imageData ? (
+                {l.imageData || l.plantImageUrl ? (
                   <img
-                    src={l.imageData}
+                    src={
+                      l.imageData ??
+                      l.plantImageUrl ??
+                      undefined
+                    }
                     alt={l.title}
                     className="h-14 w-14 shrink-0 rounded-lg border border-line object-cover"
                   />

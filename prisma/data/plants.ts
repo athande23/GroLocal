@@ -1,5 +1,6 @@
 export type PlantSeed = {
   key: string;
+  imageUrl: string;
   commonName: string;
   botanicalName: string;
   origin: string;
@@ -14,6 +15,7 @@ export type PlantSeed = {
 export const plants: PlantSeed[] = [
   {
     key: "curry-leaf",
+    imageUrl: "/plants/curry-leaf.jpg",
     commonName: "Curry Leaf",
     botanicalName: "Murraya koenigii",
     origin: "Indian subcontinent",
@@ -27,6 +29,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "coriander",
+    imageUrl: "/plants/coriander.jpg",
     commonName: "Coriander",
     botanicalName: "Coriandrum sativum",
     origin: "Eastern Mediterranean",
@@ -40,6 +43,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "thai-basil",
+    imageUrl: "/plants/thai-basil.jpg",
     commonName: "Thai Basil",
     botanicalName: "Ocimum basilicum var. thyrsiflora",
     origin: "Southeast Asia",
@@ -53,6 +57,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "holy-basil",
+    imageUrl: "/plants/holy-basil.jpg",
     commonName: "Holy Basil",
     botanicalName: "Ocimum tenuiflorum",
     origin: "Indian subcontinent",
@@ -66,6 +71,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "lemongrass",
+    imageUrl: "/plants/lemongrass.jpg",
     commonName: "Lemongrass",
     botanicalName: "Cymbopogon citratus",
     origin: "Maritime Southeast Asia",
@@ -79,6 +85,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "pandan",
+    imageUrl: "/plants/pandan.jpg",
     commonName: "Pandan",
     botanicalName: "Pandanus amaryllifolius",
     origin: "Maritime Southeast Asia",
@@ -92,6 +99,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "bitter-melon",
+    imageUrl: "/plants/bitter-melon.jpg",
     commonName: "Bitter Melon",
     botanicalName: "Momordica charantia",
     origin: "Indian subcontinent",
@@ -105,6 +113,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "okra",
+    imageUrl: "/plants/okra.jpg",
     commonName: "Okra",
     botanicalName: "Abelmoschus esculentus",
     origin: "West Africa and South Asia",
@@ -118,6 +127,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "vietnamese-mint",
+    imageUrl: "/plants/vietnamese-mint.jpg",
     commonName: "Vietnamese Mint",
     botanicalName: "Persicaria odorata",
     origin: "Vietnam",
@@ -131,6 +141,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "perilla",
+    imageUrl: "/plants/perilla.jpg",
     commonName: "Perilla",
     botanicalName: "Perilla frutescens",
     origin: "East Asia",
@@ -144,6 +155,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "bok-choy",
+    imageUrl: "/plants/bok-choy.jpg",
     commonName: "Bok Choy",
     botanicalName: "Brassica rapa subsp. chinensis",
     origin: "China",
@@ -157,6 +169,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "garlic-chives",
+    imageUrl: "/plants/garlic-chives.jpg",
     commonName: "Garlic Chives",
     botanicalName: "Allium tuberosum",
     origin: "China",
@@ -170,6 +183,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "gai-lan",
+    imageUrl: "/plants/gai-lan.jpg",
     commonName: "Chinese Broccoli",
     botanicalName: "Brassica oleracea var. alboglabra",
     origin: "China",
@@ -183,6 +197,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "molokhia",
+    imageUrl: "/plants/molokhia.jpg",
     commonName: "Molokhia",
     botanicalName: "Corchorus olitorius",
     origin: "Egypt and the Levant",
@@ -196,6 +211,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "zaatar",
+    imageUrl: "/plants/zaatar.jpg",
     commonName: "Za'atar",
     botanicalName: "Origanum syriacum",
     origin: "Levant",
@@ -209,6 +225,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "sumac",
+    imageUrl: "/plants/sumac.jpg",
     commonName: "Sumac",
     botanicalName: "Rhus coriaria",
     origin: "Middle East",
@@ -222,6 +239,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "grape-vine",
+    imageUrl: "/plants/grape-vine.jpg",
     commonName: "Grape Vine",
     botanicalName: "Vitis vinifera",
     origin: "Caucasus and Mediterranean",
@@ -235,6 +253,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "fig",
+    imageUrl: "/plants/fig.jpg",
     commonName: "Fig",
     botanicalName: "Ficus carica",
     origin: "Western Asia and Mediterranean",
@@ -248,6 +267,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "pomegranate",
+    imageUrl: "/plants/pomegranate.jpg",
     commonName: "Pomegranate",
     botanicalName: "Punica granatum",
     origin: "Persia and northern India",
@@ -261,6 +281,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "quince",
+    imageUrl: "/plants/quince.jpg",
     commonName: "Quince",
     botanicalName: "Cydonia oblonga",
     origin: "Caucasus",
@@ -274,6 +295,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "olive",
+    imageUrl: "/plants/olive.jpg",
     commonName: "Olive",
     botanicalName: "Olea europaea",
     origin: "Mediterranean basin",
@@ -287,6 +309,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "san-marzano",
+    imageUrl: "/plants/san-marzano.jpg",
     commonName: "San Marzano Tomato",
     botanicalName: "Solanum lycopersicum 'San Marzano'",
     origin: "Campania, Italy",
@@ -300,6 +323,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "basil",
+    imageUrl: "/plants/basil.jpg",
     commonName: "Sweet Basil",
     botanicalName: "Ocimum basilicum",
     origin: "India to Southeast Asia",
@@ -313,6 +337,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "rocket",
+    imageUrl: "/plants/rocket.jpg",
     commonName: "Rocket",
     botanicalName: "Eruca vesicaria",
     origin: "Mediterranean",
@@ -326,6 +351,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "radicchio",
+    imageUrl: "/plants/radicchio.jpg",
     commonName: "Radicchio",
     botanicalName: "Cichorium intybus var. foliosum",
     origin: "Veneto, Italy",
@@ -339,6 +365,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "chilli",
+    imageUrl: "/plants/chilli.jpg",
     commonName: "Bird's Eye Chilli",
     botanicalName: "Capsicum frutescens",
     origin: "The Americas via Southeast Asia",
@@ -352,6 +379,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "turmeric",
+    imageUrl: "/plants/turmeric.jpg",
     commonName: "Turmeric",
     botanicalName: "Curcuma longa",
     origin: "Indian subcontinent",
@@ -365,6 +393,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "ginger",
+    imageUrl: "/plants/ginger.jpg",
     commonName: "Ginger",
     botanicalName: "Zingiber officinale",
     origin: "Maritime Southeast Asia",
@@ -378,6 +407,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "kaffir-lime",
+    imageUrl: "/plants/kaffir-lime.jpg",
     commonName: "Makrut Lime",
     botanicalName: "Citrus hystrix",
     origin: "Southeast Asia",
@@ -391,6 +421,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "guava",
+    imageUrl: "/plants/guava.jpg",
     commonName: "Guava",
     botanicalName: "Psidium guajava",
     origin: "Central America",
@@ -404,6 +435,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "mulberry",
+    imageUrl: "/plants/mulberry.jpg",
     commonName: "Mulberry",
     botanicalName: "Morus nigra",
     origin: "Western Asia",
@@ -417,6 +449,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "loquat",
+    imageUrl: "/plants/loquat.jpg",
     commonName: "Loquat",
     botanicalName: "Eriobotrya japonica",
     origin: "China",
@@ -430,6 +463,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "betel-leaf",
+    imageUrl: "/plants/betel-leaf.jpg",
     commonName: "Betel Leaf",
     botanicalName: "Piper sarmentosum",
     origin: "Southeast Asia",
@@ -443,6 +477,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "drumstick-tree",
+    imageUrl: "/plants/drumstick-tree.jpg",
     commonName: "Drumstick Tree",
     botanicalName: "Moringa oleifera",
     origin: "Northern India",
@@ -456,6 +491,7 @@ export const plants: PlantSeed[] = [
   },
   {
     key: "taro",
+    imageUrl: "/plants/taro.jpg",
     commonName: "Taro",
     botanicalName: "Colocasia esculenta",
     origin: "Southeast Asia and Pacific",

@@ -16,19 +16,27 @@ export default async function Header() {
   });
 
   return (
-    <header className="sticky top-0 z-[1000] border-b border-line bg-paper">
+    <header className="sticky top-0 z-[1000] border-b border-green/15 bg-green/20 backdrop-blur-md">
       <div className="mx-auto flex h-14 sm:h-16 max-w-[1200px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-6 sm:gap-8">
+          {/* GroLocal logo - also links to Home */}
           <Link
             href="/"
-            className="font-[family-name:var(--font-display)] text-lg sm:text-xl font-semibold text-ink hover:text-green transition-colors"
+            className="flex shrink-0 items-center"
+            aria-label="GroLocal Home"
           >
-            GroLocal
+            <img
+              src="/logoimage.png"
+              alt="GroLocal"
+              className="h-18 sm:h-20 w-auto object-contain"
+            />
           </Link>
 
+          {/* Navigation links */}
           <NavLinks />
         </div>
 
+        {/* Profile button */}
         <Link
           href="/profile"
           className="flex shrink-0 items-center gap-2 rounded-md border border-line bg-fill px-3 py-1.5 sm:py-2 text-sm sm:text-base font-medium text-ink transition-all duration-200 hover:border-green hover:bg-green-soft/60 hover:shadow-sm"

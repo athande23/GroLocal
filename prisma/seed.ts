@@ -1,9 +1,15 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+
 import { plants } from "./data/plants";
 import { gardeners } from "./data/gardeners";
 import { stories } from "./data/stories";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaBetterSqlite3({
+  url: "file:./prisma/dev.db",
+});
+
+const prisma = new PrismaClient({ adapter });
 
 // gardenerKey -> list of [plantKey, quantity, notes?]
 const gardenAssignments: Record<string, [string, string, string?][]> = {
@@ -381,6 +387,7 @@ async function main() {
         season: p.season,
         daysToHarvest: p.daysToHarvest,
         description: p.description,
+        imageUrl: p.imageUrl,
       },
     });
     plantIds[p.key] = created.id;
