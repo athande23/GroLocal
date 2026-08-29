@@ -7,19 +7,21 @@ datasource db {
 }
 
 model User {
-  id               String        @id @default(cuid())
-  name             String
-  heritage         String
-  suburb           String
-  lat              Float
-  lng              Float
-  bio              String
-  avatarSeed       String
-  avatarData       String? // uploaded profile picture as a data URL
-  joinedAt         DateTime      @default(now())
+  id         String   @id @default(cuid())
+  name       String
+  heritage   String
+  suburb     String
+  lat        Float
+  lng        Float
+  bio        String
+  avatarSeed String
+  avatarData String?
+  joinedAt   DateTime @default(now())
+
   gardenPlants     GardenPlant[]
   stories          Story[]
   listings         Listing[]
+  claimedListings  Listing[]     @relation("ClaimedListings")
   growLogs         GrowLog[]
   following        Follow[]      @relation("follower")
   followers        Follow[]      @relation("following")
@@ -29,7 +31,7 @@ model User {
 }
 
 model Plant {
-  id            String        @id @default(cuid())
+  id            String @id @default(cuid())
   commonName    String
   botanicalName String
   origin        String
@@ -39,10 +41,11 @@ model Plant {
   season        String
   daysToHarvest Int
   description   String
-  gardenPlants  GardenPlant[]
-  stories       Story[]
-  listings      Listing[]
-  growLogs      GrowLog[]
+
+  gardenPlants GardenPlant[]
+  stories      Story[]
+  listings     Listing[]
+  growLogs     GrowLog[]
 }
 
 model GardenPlant {
@@ -51,8 +54,9 @@ model GardenPlant {
   plantId  String
   quantity String
   notes    String?
-  user     User    @relation(fields: [userId], references: [id])
-  plant    Plant   @relation(fields: [plantId], references: [id])
+
+  user  User  @relation(fields: [userId], references: [id])
+  plant Plant @relation(fields: [plantId], references: [id])
 }
 
 model Story {
@@ -63,35 +67,40 @@ model Story {
   body      String
   origin    String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  plant     Plant    @relation(fields: [plantId], references: [id])
+
+  user  User  @relation(fields: [userId], references: [id])
+  plant Plant @relation(fields: [plantId], references: [id])
 }
 
 model Listing {
-  id        String   @id @default(cuid())
-  userId    String
-  plantId   String? // null for tools and other non-plant items
-  type      String // SELL | SWAP | GIVE
-  category  String // vegetable | herb | fruit | legume | flower | tool | other
-  title     String
-  culture   String // the culture the item is associated with
-  address   String // pickup address
-  price     Float?
-  swapFor   String?
-  quantity  String
-  imageData String? // uploaded product photo as a data URL
-  claimed   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  plant     Plant?   @relation(fields: [plantId], references: [id])
+  id          String   @id @default(cuid())
+  userId      String
+  plantId     String?
+  type        String
+  category    String
+  title       String
+  culture     String
+  address     String
+  price       Float?
+  swapFor     String?
+  quantity    String
+  imageData   String?
+  claimed     Boolean  @default(false)
+  claimedById String?
+  createdAt   DateTime @default(now())
+
+  user      User   @relation(fields: [userId], references: [id])
+  claimedBy User?  @relation("ClaimedListings", fields: [claimedById], references: [id])
+  plant     Plant? @relation(fields: [plantId], references: [id])
 }
 
 model Follow {
   id          String @id @default(cuid())
   followerId  String
   followingId String
-  follower    User   @relation("follower", fields: [followerId], references: [id])
-  following   User   @relation("following", fields: [followingId], references: [id])
+
+  follower  User @relation("follower", fields: [followerId], references: [id])
+  following User @relation("following", fields: [followingId], references: [id])
 
   @@unique([followerId, followingId])
 }
@@ -103,8 +112,9 @@ model GrowLog {
   day       Int
   note      String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  plant     Plant    @relation(fields: [plantId], references: [id])
+
+  user  User  @relation(fields: [userId], references: [id])
+  plant Plant @relation(fields: [plantId], references: [id])
 }
 
 model Message {
@@ -113,17 +123,19 @@ model Message {
   toId      String
   body      String
   createdAt DateTime @default(now())
-  from      User     @relation("sender", fields: [fromId], references: [id])
-  to        User     @relation("recipient", fields: [toId], references: [id])
+
+  from User @relation("sender", fields: [fromId], references: [id])
+  to   User @relation("recipient", fields: [toId], references: [id])
 }
 
 model Post {
   id        String   @id @default(cuid())
   userId    String
-  kind      String // recipe | advice
+  kind      String
   title     String
   body      String
   culture   String?
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
 }

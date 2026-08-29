@@ -36,8 +36,17 @@ export default async function ProfilePage() {
         orderBy: { createdAt: "desc" },
       }),
       db.listing.findMany({
-        where: { claimed: true, userId: { not: me.id } },
-        include: { plant: true, user: true },
+        where: {
+          claimed: true,
+          claimedById: me.id,
+        },
+        include: {
+          plant: true,
+          user: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
       }),
       db.growLog.findMany({
         where: { userId: me.id },

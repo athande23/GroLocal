@@ -61,10 +61,8 @@ type GrowLogRow = {
 const tabs = [
   "Growing journey",
   "My garden",
-  "My stories",
   "Following",
-  "My exchanges",
-  "Cultures discovered",
+  "My purchases",
 ] as const;
 
 export default function MyRootsTabs({
@@ -223,53 +221,45 @@ export default function MyRootsTabs({
             </ul>
           ))}
 
-        {tab === "My exchanges" && (
-          <div className="space-y-10">
-            <div>
-              <h3 className="text-[16px] font-semibold text-ink">
-                My listings
-              </h3>
-              {myListings.length === 0 ? (
-                <p className="mt-3 text-[15px] text-graphite">
-                  Nothing listed yet. Surplus seedlings or produce? Neighbours
-                  are looking.
-                </p>
-              ) : (
-                <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-fill">
-                  {myListings.map((l) => (
-                    <li key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
-                      <span className="flex-1 text-[15px] text-ink">
+        {tab === "My purchases" && (
+          <div>
+            <h3 className="text-[16px] font-semibold text-ink">
+              My purchases
+            </h3>
+
+            {claimedListings.length === 0 ? (
+              <EmptyState
+                title="No purchases yet"
+                body="When you purchase something from the market, it will appear here."
+              />
+            ) : (
+              <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-fill">
+                {claimedListings.map((l) => (
+                  <li
+                    key={l.id}
+                    className="flex flex-wrap items-center gap-3 px-4 py-4"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-medium text-ink">
                         {l.title}
-                        <span className="text-graphite"> · {l.quantity}</span>
-                      </span>
-                      <ListingTag type={l.type} price={l.price} />
-                      <span className="text-[13px] text-graphite">
-                        {l.claimed ? "Claimed" : "Open"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div>
-              <h3 className="text-[16px] font-semibold text-ink">
-                Recently claimed nearby
-              </h3>
-              {claimedListings.length === 0 ? (
-                <p className="mt-3 text-[15px] text-graphite">
-                  Nothing claimed nearby yet.
-                </p>
-              ) : (
-                <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-fill">
-                  {claimedListings.map((l) => (
-                    <li key={l.id} className="px-4 py-3 text-[15px] text-graphite">
-                      <span className="text-ink">{l.title}</span> from{" "}
-                      {l.gardenerName}, {l.suburb}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                      </p>
+
+                      <p className="mt-1 text-[13px] text-graphite">
+                        {l.plantName}
+                      </p>
+
+                      <p className="mt-1 text-[13px] text-graphite">
+                        From {l.gardenerName} · {l.suburb}
+                      </p>
+                    </div>
+
+                    <span className="rounded-md bg-green-soft px-3 py-1 text-[13px] font-medium text-green">
+                      Purchased
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
