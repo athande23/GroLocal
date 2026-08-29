@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String        @id @default(cuid())
+  name             String
+  heritage         String
+  suburb           String
+  lat              Float
+  lng              Float
+  bio              String
+  avatarSeed       String
+  avatarData       String? // uploaded profile picture as a data URL
+  joinedAt         DateTime      @default(now())
+  gardenPlants     GardenPlant[]
+  stories          Story[]
+  listings         Listing[]
+  growLogs         GrowLog[]
+  following        Follow[]      @relation("follower")
+  followers        Follow[]      @relation("following")
+  sentMessages     Message[]     @relation("sender")
+  receivedMessages Message[]     @relation("recipient")
+  posts            Post[]
+}
+
+model Plant {
+  id            String        @id @default(cuid())
+  commonName    String
+  botanicalName String
+  origin        String
+  category      String
+  sunlight      String
+  water         String
+  season        String
+  daysToHarvest Int
+  description   String
+  gardenPlants  GardenPlant[]
+  stories       Story[]
+  listings      Listing[]
+  growLogs      GrowLog[]
+}
+
+model GardenPlant {
+  id       String  @id @default(cuid())
+  userId   String
+  plantId  String
+  quantity String
+  notes    String?
+  user     User    @relation(fields: [userId], references: [id])
+  plant    Plant   @relation(fields: [plantId], references: [id])
+}
+
+model Story {
+  id        String   @id @default(cuid())
+  userId    String
+  plantId   String
+  title     String
+  body      String
+  origin    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  plant     Plant    @relation(fields: [plantId], references: [id])
+}
+
+model Listing {
+  id        String   @id @default(cuid())
+  userId    String
+  plantId   String? // null for tools and other non-plant items
+  type      String // SELL | SWAP | GIVE
+  category  String // vegetable | herb | fruit | legume | flower | tool | other
+  title     String
+  culture   String // the culture the item is associated with
+  address   String // pickup address
+  price     Float?
+  swapFor   String?
+  quantity  String
+  imageData String? // uploaded product photo as a data URL
+  claimed   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  plant     Plant?   @relation(fields: [plantId], references: [id])
+}
+
+model Follow {
+  id          String @id @default(cuid())
+  followerId  String
+  followingId String
+  follower    User   @relation("follower", fields: [followerId], references: [id])
+  following   User   @relation("following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
+model GrowLog {
+  id        String   @id @default(cuid())
+  userId    String
+  plantId   String
+  day       Int
+  note      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  plant     Plant    @relation(fields: [plantId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  fromId    String
+  toId      String
+  body      String
+  createdAt DateTime @default(now())
+  from      User     @relation("sender", fields: [fromId], references: [id])
+  to        User     @relation("recipient", fields: [toId], references: [id])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String // recipe | advice
+  title     String
+  body      String
+  culture   String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}

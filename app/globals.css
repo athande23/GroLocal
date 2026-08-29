@@ -1,26 +1,63 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --color-ink: #1c1b19;
+  --color-graphite: #5f5c55;
+  --color-green: #3f6b4a;
+  --color-green-soft: #edf2ed;
+  --color-paper: #fcfbf8;
+  --color-fill: #f3f1ec;
+  --color-line: #e2dfd8;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-source-serif), Georgia, serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+::selection {
+  background: var(--color-green-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+/* Leaflet marker styling */
+.garden-marker {
+  background: transparent;
+  border: none;
+}
+.garden-marker span {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--color-green);
+  box-shadow: 0 0 0 2px var(--color-paper);
+  transition: width 150ms, height 150ms;
+}
+.garden-marker.selected span {
+  width: 20px;
+  height: 20px;
+}
+.leaflet-container {
+  font-family: var(--font-body);
+  background: var(--color-fill);
+}
+
+/* thin scrollbars for the horizontal plant rows */
+.scroll-row {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
 }

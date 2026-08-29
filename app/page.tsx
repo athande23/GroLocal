@@ -1,69 +1,179 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
+import { distanceKm, formatDistance } from "@/lib/distance";
+import { ButtonLink } from "@/components/ui/Button";
+import { HeritageTag } from "@/components/ui/Tag";
+import { PlantTile } from "@/components/PlantTile";
+import { Avatar } from "@/components/Avatar";
+import HomeSearch from "@/components/HomeSearch";
+import UploadListing from "@/components/UploadListing";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+const cultureChips = [
+  { label: "Indian gardens", match: "Indian" },
+  { label: "Italian gardens", match: "Italian" },
+  { label: "Lebanese gardens", match: "Lebanese" },
+  { label: "Vietnamese gardens", match: "Vietnamese" },
+  { label: "Chinese gardens", match: "Chinese" },
+];
+
+export default async function Home() {
+  const me = await getCurrentUser();
+
+  const [gardenerCount, plantCount, storyCount, listingCount, heritages] =
+    await Promise.all([
+      db.user.count(),
+      db.plant.count(),
+      db.story.count(),
+      db.listing.count({ where: { claimed: false } }),
+      db.user.findMany({ select: { heritage: true }, distinct: ["heritage"] }),
+    ]);
+
+  const plantsNearYou = await db.plant.findMany({
+    include: { _count: { select: { gardenPlants: true } } },
+    orderBy: { gardenPlants: { _count: "desc" } },
+    take: 10,
+  });
+
+  const storiesNearYou = await db.story.findMany({
+    include: { user: true, plant: true },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+  });
+
+  const chips = cultureChips.filter((c) =>
+    heritages.some((h) => h.heritage.includes(c.match))
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="mx-auto max-w-[1080px] px-5">
+      {/* Search, front and centre */}
+      <section className="pt-10">
+        <HomeSearch />
+      </section>
+
+      {/* Hero */}
+      <section className="pt-10 pb-12">
+        <h1 className="max-w-[640px] font-[family-name:var(--font-display)] text-[36px] font-semibold leading-[44px] text-ink">
+          Discover the people, plants and stories growing around you.
+        </h1>
+        <p className="mt-4 max-w-[640px] text-[16px] text-graphite">
+          Backyard produce, cultural knowledge and seedlings, shared across
+          your suburb.
+        </p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <ButtonLink href="/market">
+            Open the market
+            <ArrowRight size={16} strokeWidth={1.5} />
+          </ButtonLink>
+          <UploadListing defaultAddress={`${me.suburb}`} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <p className="mt-10 text-[15px] text-graphite">
+          <span className="font-medium text-ink">{gardenerCount}</span> gardeners
+          {" · "}
+          <span className="font-medium text-ink">{plantCount}</span> plants
+          {" · "}
+          <span className="font-medium text-ink">{storyCount}</span> stories
+          {" · "}
+          <span className="font-medium text-ink">{listingCount}</span> things on
+          the market
+        </p>
+      </section>
+
+      {/* Growing near you */}
+      <section className="border-t border-line py-12">
+        <h2 className="font-[family-name:var(--font-display)] text-[24px] font-semibold leading-8 text-ink">
+          Growing near you
+        </h2>
+        <div className="scroll-row -mx-1 mt-6 flex gap-4 overflow-x-auto px-1 pb-2">
+          {plantsNearYou.map((p) => (
+            <Link
+              key={p.id}
+              href={`/market?q=${encodeURIComponent(p.commonName)}`}
+              className="w-44 shrink-0 rounded-lg border border-line bg-fill p-4 transition-colors duration-150 hover:border-green"
+            >
+              <PlantTile name={p.commonName} size="md" />
+              <p className="mt-3 text-[16px] font-semibold leading-[22px] text-ink">
+                {p.commonName}
+              </p>
+              <p className="mt-0.5 text-[13px] text-graphite">{p.origin}</p>
+              <p className="mt-2 text-[13px] text-graphite">
+                {p._count.gardenPlants} gardener
+                {p._count.gardenPlants === 1 ? "" : "s"} nearby
+              </p>
+            </Link>
+          ))}
         </div>
-      </main>
+      </section>
+
+      {/* Stories near you */}
+      <section className="border-t border-line py-12">
+        <h2 className="font-[family-name:var(--font-display)] text-[24px] font-semibold leading-8 text-ink">
+          Stories near you
+        </h2>
+        <div className="mt-6 grid gap-6 md:grid-cols-3">
+          {storiesNearYou.map((s) => (
+            <Link
+              key={s.id}
+              href={`/story/${s.id}`}
+              className="rounded-lg border border-line bg-fill p-5 transition-colors duration-150 hover:border-green"
+            >
+              <p className="font-[family-name:var(--font-display)] text-[18px] font-semibold leading-6 text-ink">
+                {s.title}
+              </p>
+              <div className="mt-3 flex items-center gap-2.5">
+                <Avatar
+                  seed={s.user.avatarSeed}
+                  src={s.user.avatarData}
+                  name={s.user.name}
+                  size="sm"
+                />
+                <div>
+                  <p className="text-[13px] font-medium text-ink">
+                    {s.user.name}
+                  </p>
+                  <p className="text-[13px] text-graphite">
+                    {formatDistance(distanceKm(me.lat, me.lng, s.user.lat, s.user.lng))} away
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <HeritageTag heritage={s.user.heritage} />
+              </div>
+              <p className="mt-3 line-clamp-2 text-[15px] text-graphite">
+                {s.body.split("\n")[0]}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Discover a culture */}
+      <section className="border-t border-line py-12">
+        <h2 className="font-[family-name:var(--font-display)] text-[24px] font-semibold leading-8 text-ink">
+          Discover a culture
+        </h2>
+        <p className="mt-2 max-w-[640px] text-[15px] text-graphite">
+          Market finds from neighbours who describe their heritage this way.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          {chips.map((c) => {
+            const heritage = heritages.find((h) => h.heritage.includes(c.match));
+            return (
+              <Link
+                key={c.label}
+                href={`/market?culture=${encodeURIComponent(heritage?.heritage ?? "")}`}
+                className="rounded-md border border-line bg-fill px-4 py-2 text-[15px] text-ink transition-colors duration-150 hover:border-green"
+              >
+                {c.label}
+              </Link>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }
