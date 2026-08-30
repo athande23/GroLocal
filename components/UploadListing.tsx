@@ -1,306 +1,314 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ImageUp, Upload } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 
 const categories = [
-"vegetable",
-"herb",
-"fruit",
-"legume",
-"flower",
-"tool",
-"other",
-];
+  "vegetable",
+  "herb",
+  "fruit",
+  "legume",
+  "flower",
+  "tool",
+  "other",
+] as const;
 
-const cultureCategories = [
-"vegetable",
-"herb",
-"fruit",
-"legume",
-"flower",
-];
-
-export default function UploadListing({
-defaultAddress,
-}: {
-defaultAddress: string;
-}) {
-const router = useRouter();
-const [open, setOpen] = useState(false);
-const [busy, setBusy] = useState(false);
-const [error, setError] = useState("");
-
-const [title, setTitle] = useState("");
-const [category, setCategory] = useState("vegetable");
-const [culture, setCulture] = useState("");
-const [address, setAddress] = useState(defaultAddress);
-const [price, setPrice] = useState("");
-const [quantity, setQuantity] = useState("");
-const [imageData, setImageData] = useState<string | null>(null);
-
-const fileRef = useRef<HTMLInputElement>(null);
-
-const showCulture = cultureCategories.includes(category);
-
-function readImage(file: File) {
-if (!file.type.startsWith("image/")) return;
-
-const reader = new FileReader();
-
-reader.onload = () => {
-  setImageData(reader.result as string);
+type UploadListingProps = {
+  defaultAddress: string;
 };
 
-reader.readAsDataURL(file);
+type ListingResponse = {
+  error?: string;
+  ok?: boolean;
+};
 
-}
+export default function UploadListing({
+  defaultAddress,
+}: UploadListingProps) {
+  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
 
-async function submit(e: React.FormEvent) {
-e.preventDefault();
+  const [open, setOpen] = useState<boolean>(false);
+  const [busy, setBusy] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-if (busy) return;
+  const [title, setTitle] = useState<string>("");
+  const [category, setCategory] =
+    useState<(typeof categories)[number]>("vegetable");
+  const [culture, setCulture] = useState<string>("");
+  const [address, setAddress] = useState<string>(defaultAddress);
+  const [price, setPrice] = useState<string>("");
+  const [quantity, setQuantity] = useState<string>("");
+  const [imageData, setImageData] = useState<string | null>(null);
 
-setBusy(true);
-setError("");
+  function readImage(file: File): void {
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
+      return;
+    }
 
-try {
-  const res = await fetch("/api/listing", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      title,
-      category,
-      culture: showCulture ? culture : "",
-      address,
-      price: price || null,
-      quantity,
-      imageData,
-    }),
-  });
+    setError("");
 
-  const data = await res.json();
+    const reader = new FileReader();
 
-  if (!res.ok) {
-    setError(data.error ?? "Something went wrong");
-    return;
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setImageData(reader.result);
+      }
+    };
+
+    reader.onerror = () => {
+      setError("Could not read the image.");
+    };
+
+    reader.readAsDataURL(file);
   }
 
-  setOpen(false);
+  async function submit(
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
+    e.preventDefault();
 
-  router.push(
-    `/market?q=${encodeURIComponent(title.trim())}`
-  );
+    if (busy) {
+      return;
+    }
 
-  router.refresh();
-} finally {
-  setBusy(false);
-}
+    setBusy(true);
+    setError("");
 
-}
+    const searchTitle = title.trim();
 
-return (
-<>
-<Button
-variant="primary"
-onClick={() => setOpen(true)}
-className="bg-green text-paper hover/85"
->
-<Upload size={16} strokeWidth={1.5} />
-Upload Item
-</Button>
+    try {
+      const response = await fetch("/api/listing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: searchTitle,
+          category,
+          culture: culture.trim(),
+          address: address.trim(),
+          price: price ? Number(price) : null,
+          quantity: quantity.trim(),
+          imageData,
+        }),
+      });
 
-  <Modal
-    open={open}
-    onClose={() => setOpen(false)}
-    title="Upload Item"
-  >
-    <form onSubmit={submit} className="space-y-4">
-      {/* Name */}
-      <label className="block">
-        <span className="text-[13px] font-medium text-graphite">
-          Name
-        </span>
+      const data: ListingResponse = await response.json();
 
-        <input
-          required
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Lemongrass stalks, ready to root"
-          className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
-        />
-      </label>
+      if (!response.ok) {
+        setError(data.error ?? "Something went wrong.");
+        return;
+      }
 
-      {/* Photo */}
-      <div>
-        <span className="text-[13px] font-medium text-graphite">
-          Photo
-        </span>
+      setOpen(false);
 
-        <div className="mt-1 flex items-center gap-3">
-          {imageData ? (
-            <img
-              src={imageData}
-              alt="Preview of the product photo"
-              className="h-16 w-16 rounded-lg border border-line object-cover"
-            />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-line bg-fill">
-              <ImageUp
-                size={18}
-                strokeWidth={1.5}
-                className="text-graphite"
-              />
-            </div>
-          )}
+      setTitle("");
+      setCulture("");
+      setPrice("");
+      setQuantity("");
+      setImageData(null);
 
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="rounded-md border border-ink px-3 py-1.5 text-[13px] font-medium text-ink transition-colors duration-150 hover:bg-ink hover:text-paper"
-          >
-            {imageData ? "Change photo" : "Add a photo"}
-          </button>
+      router.push(
+        `/market?q=${encodeURIComponent(searchTitle)}`
+      );
 
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            aria-label="Upload a product photo"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
+      router.refresh();
+    } catch {
+      setError(
+        "Could not upload the item. Please try again."
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
 
-              if (file) {
-                readImage(file);
-              }
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Type + Culture */}
-      <div
-        className={
-          showCulture
-            ? "grid grid-cols-2 gap-3"
-            : ""
-        }
+  return (
+    <>
+      <Button
+        variant="primary"
+        onClick={() => setOpen(true)}
+        className="px-8 py-4 text-[17px] font-semibold"
       >
-        <label className="block">
-          <span className="text-[13px] font-medium text-graphite">
-            Type
-          </span>
+        <Upload size={20} strokeWidth={1.8} />
+        Upload Item
+      </Button>
 
-          <select
-            value={category}
-            onChange={(e) => {
-              const newCategory = e.target.value;
-
-              setCategory(newCategory);
-
-              if (!cultureCategories.includes(newCategory)) {
-                setCulture("");
-              }
-            }}
-            className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c.charAt(0).toUpperCase() + c.slice(1)}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {showCulture && (
+      <Modal
+        open={open}
+        onClose={() => {
+          if (!busy) {
+            setOpen(false);
+          }
+        }}
+        title="Upload Item"
+      >
+        <form onSubmit={submit} className="space-y-4">
           <label className="block">
             <span className="text-[13px] font-medium text-graphite">
-              Culture it comes from
+              Name
             </span>
 
             <input
               required
-              value={culture}
-              onChange={(e) => setCulture(e.target.value)}
-              placeholder="e.g. Vietnamese"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Lemongrass stalks, ready to root"
               className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
             />
           </label>
-        )}
-      </div>
 
-      {/* Pickup Address */}
-      <label className="block">
-        <span className="text-[13px] font-medium text-graphite">
-          Pickup address
-        </span>
+          <div>
+            <span className="text-[13px] font-medium text-graphite">
+              Photo
+            </span>
 
-        <input
-          required
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="e.g. 8 Enid Ave, Granville"
-          className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
-        />
-      </label>
+            <div className="mt-1 flex items-center gap-3">
+              {imageData ? (
+                <img
+                  src={imageData}
+                  alt="Preview of the product photo"
+                  className="h-16 w-16 rounded-lg border border-line object-cover"
+                />
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-line bg-fill">
+                  <ImageUp
+                    size={18}
+                    strokeWidth={1.5}
+                    className="text-graphite"
+                  />
+                </div>
+              )}
 
-      {/* Price + Quantity */}
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block">
-          <span className="text-[13px] font-medium text-graphite">
-            Price (leave empty to give away)
-          </span>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="rounded-md border border-ink px-3 py-1.5 text-[13px] font-medium text-ink transition-colors duration-150 hover:bg-ink hover:text-paper"
+              >
+                {imageData ? "Change photo" : "Add a photo"}
+              </button>
 
-          <input
-            type="number"
-            min="0"
-            step="0.5"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="$"
-            className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
-          />
-        </label>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                aria-label="Upload a product photo"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
 
-        <label className="block">
-          <span className="text-[13px] font-medium text-graphite">
-            Quantity
-          </span>
+                  if (file) {
+                    readImage(file);
+                  }
+                }}
+              />
+            </div>
+          </div>
 
-          <input
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            placeholder="e.g. 2 bags"
-            className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
-          />
-        </label>
-      </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-[13px] font-medium text-graphite">
+                Type
+              </span>
 
-      {/* Error */}
-      {error && (
-        <p className="text-[13px] text-ink">
-          {error}
-        </p>
-      )}
+              <select
+                value={category}
+                onChange={(e) =>
+                  setCategory(
+                    e.target.value as (typeof categories)[number]
+                  )
+                }
+                className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
+              >
+                {categories.map((item) => (
+                  <option key={item} value={item}>
+                    {item.charAt(0).toUpperCase() + item.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-      {/* Submit */}
-      <Button
-        type="submit"
-        disabled={busy}
-        className="w-full justify-center bg-green text-paper hover:bg-green/85"
-      >
-        {busy ? "Uploading…" : "Upload Item"}
-      </Button>
-    </form>
-  </Modal>
-</>
+            <label className="block">
+              <span className="text-[13px] font-medium text-graphite">
+                Culture it comes from
+              </span>
 
-);
+              <input
+                required
+                value={culture}
+                onChange={(e) => setCulture(e.target.value)}
+                placeholder="e.g. Vietnamese"
+                className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
+              />
+            </label>
+          </div>
+
+          <label className="block">
+            <span className="text-[13px] font-medium text-graphite">
+              Pickup address
+            </span>
+
+            <input
+              required
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="e.g. 8 Enid Ave, Granville"
+              className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
+            />
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-[13px] font-medium text-graphite">
+                Price
+              </span>
+
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="$"
+                className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-[13px] font-medium text-graphite">
+                Quantity
+              </span>
+
+              <input
+                required
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="e.g. 2 bags"
+                className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-[15px] placeholder:text-graphite focus:border-green focus:outline-none focus:ring-2 focus:ring-green-soft"
+              />
+            </label>
+          </div>
+
+          {error && (
+            <p className="text-[13px] text-red-700">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={busy}
+            variant="primary"
+            className="w-full justify-center py-3 text-[16px]"
+          >
+            {busy ? "Uploading..." : "Upload Item"}
+          </Button>
+        </form>
+      </Modal>
+    </>
+  );
 }

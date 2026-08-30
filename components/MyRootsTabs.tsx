@@ -63,6 +63,8 @@ const tabs = [
   "My garden",
   "Following",
   "My purchases",
+  "My stories",
+  "Cultures discovered",
 ] as const;
 
 export default function MyRootsTabs({

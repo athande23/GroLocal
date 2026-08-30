@@ -73,10 +73,7 @@ export default async function Home() {
 
         {/* Upload Item */}
         <div className="mt-6 sm:mt-8 flex justify-center">
-          <UploadListing
-            defaultAddress={`${me.suburb}`}
-            buttonLabel="Upload Item"
-          />
+          <UploadListing defaultAddress={me.suburb} />
         </div>
 
         {/* Stats */}
