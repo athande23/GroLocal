@@ -28,7 +28,11 @@ type ExtractedIngredient = {
   quantity: string;
 };
 
-const FALLBACK: { ingredients: ExtractedIngredient[] } = {
+type ExtractedResponse = {
+  ingredients: ExtractedIngredient[];
+};
+
+const FALLBACK: ExtractedResponse = {
   ingredients: [
     {
       name: "Fresh curry leaves",
@@ -63,7 +67,6 @@ const FALLBACK: { ingredients: ExtractedIngredient[] } = {
   ],
 };
 
-// Loose aliases so common recipe words land on the seeded plants.
 const aliases: Record<string, string> = {
   tomato: "san marzano tomato",
   tomatoes: "san marzano tomato",
@@ -83,7 +86,7 @@ const aliases: Record<string, string> = {
   "grape leaves": "grape vine",
 };
 
-const delay = (ms: number) =>
+const delay = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 async function extractIngredients(
@@ -100,7 +103,9 @@ async function extractIngredients(
   }
 
   try {
-    const ai = new GoogleGenAI({});
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+    });
 
     const response = await ai.models.generateContent({
       model: "gemini-3.7-flash",
@@ -120,29 +125,65 @@ ${recipeText}`,
       return FALLBACK.ingredients;
     }
 
-    const parsed = JSON.parse(text);
+    const parsed: unknown = JSON.parse(text);
 
     if (
-      Array.isArray(parsed.ingredients) &&
-      parsed.ingredients.length > 0
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "ingredients" in parsed
     ) {
-      return parsed.ingredients;
+      const data = parsed as {
+        ingredients?: unknown;
+      };
+
+      if (Array.isArray(data.ingredients)) {
+        const validIngredients = data.ingredients.filter(
+          (ingredient): ingredient is ExtractedIngredient => {
+            if (
+              typeof ingredient !== "object" ||
+              ingredient === null
+            ) {
+              return false;
+            }
+
+            const item = ingredient as Record<string, unknown>;
+
+            return (
+              typeof item.name === "string" &&
+              typeof item.normalised === "string" &&
+              typeof item.quantity === "string"
+            );
+          }
+        );
+
+        if (validIngredients.length > 0) {
+          return validIngredients;
+        }
+      }
     }
 
     return FALLBACK.ingredients;
-  } catch (err) {
-    console.error("Gemini API error:", err);
+  } catch (error) {
+    console.error("Gemini API error:", error);
     return FALLBACK.ingredients;
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
   try {
-    const { recipeText } = await req.json();
+    const body: unknown = await req.json();
+
+    const recipeText =
+      typeof body === "object" &&
+      body !== null &&
+      "recipeText" in body &&
+      typeof (body as { recipeText?: unknown }).recipeText === "string"
+        ? (body as { recipeText: string }).recipeText
+        : "";
 
     const me = await getCurrentUser();
 
-    const ingredients = await extractIngredients(recipeText ?? "");
+    const ingredients = await extractIngredients(recipeText);
 
     const plants = await db.plant.findMany({
       include: {
@@ -162,12 +203,12 @@ export async function POST(req: Request) {
       },
     });
 
-    const results = ingredients.map((ing) => {
-      const raw = ing.normalised.toLowerCase().trim();
+    const results = ingredients.map((ingredient) => {
+      const raw = ingredient.normalised.toLowerCase().trim();
       const target = aliases[raw] ?? raw;
 
-      const plant = plants.find((p) => {
-        const common = p.commonName.toLowerCase();
+      const plant = plants.find((plantItem: (typeof plants)[number]) => {
+        const common = plantItem.commonName.toLowerCase();
 
         return (
           common === target ||
@@ -178,47 +219,51 @@ export async function POST(req: Request) {
 
       if (!plant) {
         return {
-          ingredient: ing.name,
-          quantity: ing.quantity,
+          ingredient: ingredient.name,
+          quantity: ingredient.quantity,
           match: null,
         };
       }
 
-      // Find nearest gardener growing the ingredient.
       const growers = plant.gardenPlants
-        .filter((gp) => gp.user.id !== me.id)
-        .map((gp) => ({
-          gardener: gp.user,
+        .filter(
+          (gardenPlant: (typeof plant.gardenPlants)[number]) =>
+            gardenPlant.user.id !== me.id
+        )
+        .map((gardenPlant: (typeof plant.gardenPlants)[number]) => ({
+          gardener: gardenPlant.user,
           distance: distanceKm(
             me.lat,
             me.lng,
-            gp.user.lat,
-            gp.user.lng
+            gardenPlant.user.lat,
+            gardenPlant.user.lng
           ),
         }))
-        .sort((a, b) => a.distance - b.distance);
+        .sort((a: { gardener: (typeof plant.gardenPlants)[number]['user']; distance: number }, b: { gardener: (typeof plant.gardenPlants)[number]['user']; distance: number }) => a.distance - b.distance);
 
       const nearest = growers[0];
 
       if (!nearest) {
         return {
-          ingredient: ing.name,
-          quantity: ing.quantity,
+          ingredient: ingredient.name,
+          quantity: ingredient.quantity,
           match: {
             plantName: plant.commonName,
             gardener: null,
+            availability: null,
           },
         };
       }
 
       const listing =
         plant.listings.find(
-          (l) => l.user.id === nearest.gardener.id
+          (listingItem: typeof plant.listings[number]) =>
+            listingItem.user.id === nearest.gardener.id
         ) ?? plant.listings[0];
 
       return {
-        ingredient: ing.name,
-        quantity: ing.quantity,
+        ingredient: ingredient.name,
+        quantity: ingredient.quantity,
         match: {
           plantName: plant.commonName,
           gardener: {
@@ -238,7 +283,9 @@ export async function POST(req: Request) {
       };
     });
 
-    return NextResponse.json({ results });
+    return NextResponse.json({
+      results,
+    });
   } catch (error) {
     console.error("Recipe API error:", error);
 

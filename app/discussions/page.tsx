@@ -10,32 +10,35 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function DiscussionsPage() {
+export default async function DiscussionsPage(): Promise<React.ReactElement> {
   const meId = await getCurrentUserId();
+
   const posts = await db.post.findMany({
-    include: { user: true },
-    orderBy: { createdAt: "desc" },
+    include: {
+      user: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
-  return (
-    <DiscussionsView
-      posts={posts.map((p) => ({
-        id: p.id,
-        kind: p.kind,
-        title: p.title,
-        body: p.body,
-        culture: p.culture,
-        authorId: p.user.id,
-        authorName: p.user.name,
-        authorSuburb: p.user.suburb,
-        authorAvatarSeed: p.user.avatarSeed,
-        authorAvatarData: p.user.avatarData,
-        mine: p.user.id === meId,
-        date: p.createdAt.toLocaleDateString("en-AU", {
-          day: "numeric",
-          month: "short",
-        }),
-      }))}
-    />
-  );
+  const discussionPosts = posts.map((post: typeof posts[0]) => ({
+    id: post.id,
+    kind: post.kind,
+    title: post.title,
+    body: post.body,
+    culture: post.culture,
+    authorId: post.user.id,
+    authorName: post.user.name,
+    authorSuburb: post.user.suburb,
+    authorAvatarSeed: post.user.avatarSeed,
+    authorAvatarData: post.user.avatarData,
+    mine: post.user.id === meId,
+    date: post.createdAt.toLocaleDateString("en-AU", {
+      day: "numeric",
+      month: "short",
+    }),
+  }));
+
+  return <DiscussionsView posts={discussionPosts} />;
 }

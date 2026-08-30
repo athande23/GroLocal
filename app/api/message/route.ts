@@ -1,18 +1,116 @@
 import { NextResponse } from "next/server";
+
 import { db } from "@/lib/db";
-import { getCurrentUserId } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 
-export async function POST(req: Request) {
-  const { toId, body } = await req.json();
-  const fromId = await getCurrentUserId();
+type MessageRequest = {
+  toId?: unknown;
+  body?: unknown;
+};
 
-  if (!toId || toId === fromId || !body?.trim()) {
-    return NextResponse.json({ error: "Invalid message" }, { status: 400 });
+export async function POST(
+  req: Request
+): Promise<Response> {
+  try {
+    const me = await getCurrentUser();
+
+    const data =
+      (await req.json()) as MessageRequest;
+
+    if (
+      typeof data.toId !== "string" ||
+      data.toId.trim().length === 0
+    ) {
+      return NextResponse.json(
+        {
+          error: "Recipient is required.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    if (
+      typeof data.body !== "string" ||
+      data.body.trim().length === 0
+    ) {
+      return NextResponse.json(
+        {
+          error: "Message body is required.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const toId = data.toId.trim();
+    const body = data.body.trim();
+
+    if (toId === me.id) {
+      return NextResponse.json(
+        {
+          error: "You cannot message yourself.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const recipient = await db.user.findUnique({
+      where: {
+        id: toId,
+      },
+    });
+
+    if (!recipient) {
+      return NextResponse.json(
+        {
+          error: "Recipient not found.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    const message = await db.message.create({
+      data: {
+        fromId: me.id,
+        toId,
+        body,
+      },
+    });
+
+    return NextResponse.json(
+      {
+        message: {
+          id: message.id,
+          fromId: message.fromId,
+          toId: message.toId,
+          body: message.body,
+          createdAt: message.createdAt,
+        },
+      },
+      {
+        status: 201,
+      }
+    );
+  } catch (error) {
+    console.error(
+      "Message API error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error: "Failed to send message.",
+      },
+      {
+        status: 500,
+      }
+    );
   }
-
-  const message = await db.message.create({
-    data: { fromId, toId, body: body.trim() },
-  });
-
-  return NextResponse.json({ ok: true, message });
 }

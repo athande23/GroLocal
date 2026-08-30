@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { distanceKm } from "@/lib/distance";
-import MarketView, { type MarketListing } from "@/components/MarketView";
+import MarketView, {
+  type MarketListing,
+} from "@/components/MarketView";
 
 export const metadata: Metadata = {
   title: "Market",
@@ -16,8 +18,11 @@ export const dynamic = "force-dynamic";
 export default async function MarketPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; culture?: string }>;
-}) {
+  searchParams: Promise<{
+    q?: string;
+    culture?: string;
+  }>;
+}): Promise<React.ReactElement> {
   const params = await searchParams;
 
   const me = await getCurrentUser();
@@ -32,56 +37,83 @@ export default async function MarketPage({
     },
   });
 
-  const items: MarketListing[] = listings.map((l, i) => ({
-    id: l.id,
-    title: l.title,
-    type: l.type,
-    category: l.category,
-    culture: l.culture,
-    address: l.address,
-    price: l.price,
-    swapFor: l.swapFor,
-    quantity: l.quantity,
-    imageData: l.imageData,
-    plantImageUrl: l.plant?.imageUrl ?? null,
-    claimed: l.claimed,
+  const items: MarketListing[] = listings.map(
+    (
+      l: (typeof listings)[number],
+      i: number
+    ) => ({
+      id: l.id,
+      title: l.title,
+      type: l.type,
+      category: l.category,
+      culture: l.culture,
+      address: l.address,
+      price: l.price,
+      swapFor: l.swapFor,
+      quantity: l.quantity,
+      imageData: l.imageData,
+      plantImageUrl: null,
+      claimed: l.claimed,
 
-    plantName: l.plant?.commonName ?? null,
+      plantName: l.plant?.commonName ?? null,
 
-    gardenerId: l.user.id,
-    gardenerName: l.user.name,
-    suburb: l.user.suburb,
+      gardenerId: l.user.id,
+      gardenerName: l.user.name,
+      suburb: l.user.suburb,
 
-    // Slightly offset listings from the same location
-    // so multiple pins don't completely overlap.
-    lat: l.user.lat + ((i % 5) - 2) * 0.0006,
-    lng:
-      l.user.lng +
-      ((Math.floor(i / 5) % 5) - 2) * 0.0006,
+      // Slightly offset listings from the same location
+      // so multiple pins don't completely overlap.
+      lat:
+        l.user.lat +
+        ((i % 5) - 2) * 0.0006,
 
-    distance: distanceKm(
-      me.lat,
-      me.lng,
-      l.user.lat,
-      l.user.lng
-    ),
+      lng:
+        l.user.lng +
+        ((Math.floor(i / 5) % 5) - 2) *
+          0.0006,
 
-    isMine: l.userId === me.id,
-  }));
+      distance: distanceKm(
+        me.lat,
+        me.lng,
+        l.user.lat,
+        l.user.lng
+      ),
+
+      isMine: l.userId === me.id,
+    })
+  );
 
   const cultures = [
     ...new Set(
       items
-        .map((l) => l.culture)
-        .filter(Boolean)
+        .map(
+          (listing: MarketListing) =>
+            listing.culture
+        )
+        .filter(
+          (
+            culture
+          ): culture is NonNullable<
+            MarketListing["culture"]
+          > => Boolean(culture)
+        )
     ),
   ].sort();
 
   const categories = [
     ...new Set(
       items
-        .map((l) => l.category)
-        .filter(Boolean)
+        .map(
+          (listing: MarketListing) =>
+            listing.category
+        )
+        .filter(
+          (
+            category
+          ): category is NonNullable<
+            MarketListing["category"]
+          > => Boolean(category)
+        )
     ),
   ].sort();
 

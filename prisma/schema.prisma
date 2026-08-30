@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -31,7 +32,7 @@ model User {
 }
 
 model Plant {
-  id            String  @id @default(cuid())
+  id            String @id @default(cuid())
   commonName    String
   botanicalName String
   origin        String

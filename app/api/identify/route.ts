@@ -1,27 +1,34 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { distanceKm } from "@/lib/distance";
 
 const SYSTEM = `You identify plants from photographs for a community gardening app.
+
 Respond with ONLY a JSON object, no markdown fences, no preamble, matching:
+
 {
   "commonName": string,
   "botanicalName": string,
   "confidence": "high" | "medium" | "low",
   "origin": string,
   "culturalUses": string[],
-  "growingNotes": { "sunlight": string, "water": string, "season": string },
+  "growingNotes": {
+    "sunlight": string,
+    "water": string,
+    "season": string
+  },
   "notes": string
 }
-Describe how the plant is used in the cuisines and traditions where it is
-commonly grown. Do not invent a personal or family story about anyone.`;
+
+Describe how the plant is used in the cuisines and traditions where it is commonly grown. Do not invent a personal or family story about anyone.`;
 
 const FALLBACK = {
   commonName: "Curry Leaf",
   botanicalName: "Murraya koenigii",
-  confidence: "high",
+  confidence: "high" as const,
   origin: "Indian subcontinent",
   culturalUses: [
     "Tempered in hot oil at the start of South Indian curries and dals",
@@ -36,21 +43,66 @@ const FALLBACK = {
   notes: "Frost sensitive. Thrives in Sydney's warm months.",
 };
 
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 type Identification = typeof FALLBACK;
+
+type RequestBody = {
+  imageBase64?: unknown;
+  mediaType?: unknown;
+};
+
+type Grower = {
+  id: string;
+  name: string;
+  suburb: string;
+  heritage: string;
+  avatarSeed: string;
+  quantity: number;
+  distance: number;
+};
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function isValidMediaType(
+  mediaType: string
+): mediaType is
+  | "image/jpeg"
+  | "image/png"
+  | "image/gif"
+  | "image/webp" {
+  return (
+    mediaType === "image/jpeg" ||
+    mediaType === "image/png" ||
+    mediaType === "image/gif" ||
+    mediaType === "image/webp"
+  );
+}
 
 async function identify(
   imageBase64: string,
   mediaType: string
 ): Promise<Identification> {
-  if (process.env.DEMO_MODE === "true" || !process.env.ANTHROPIC_API_KEY) {
+  if (
+    process.env.DEMO_MODE === "true" ||
+    !process.env.ANTHROPIC_API_KEY
+  ) {
     await delay(900);
     return FALLBACK;
   }
+
   try {
-    const client = new Anthropic();
-    const msg = await client.messages.create({
+    const client = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
+    const safeMediaType = isValidMediaType(mediaType)
+      ? mediaType
+      : "image/jpeg";
+
+    const message = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 1000,
       system: SYSTEM,
@@ -62,55 +114,178 @@ async function identify(
               type: "image",
               source: {
                 type: "base64",
-                media_type: mediaType as "image/jpeg",
+                media_type: safeMediaType,
                 data: imageBase64,
               },
             },
-            { type: "text", text: "Identify this plant." },
+            {
+              type: "text",
+              text: "Identify this plant.",
+            },
           ],
         },
       ],
     });
-    const text = msg.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b as { text: string }).text)
+
+    const text = message.content
+      .filter((block) => block.type === "text")
+      .map((block) => block.text)
       .join("")
-      .replace(/```json|```/g, "")
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
       .trim();
-    return JSON.parse(text);
-  } catch (err) {
-    console.error(err);
+
+    if (!text) {
+      return FALLBACK;
+    }
+
+    const parsed: unknown = JSON.parse(text);
+
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !("commonName" in parsed) ||
+      !("botanicalName" in parsed)
+    ) {
+      return FALLBACK;
+    }
+
+    return parsed as Identification;
+  } catch (error) {
+    console.error(
+      "Plant identification failed:",
+      error
+    );
+
     return FALLBACK;
   }
 }
 
-export async function POST(req: Request) {
-  const { imageBase64, mediaType } = await req.json();
-  const result = await identify(imageBase64, mediaType);
+export async function POST(
+  req: Request
+): Promise<Response> {
+  try {
+    const body =
+      (await req.json()) as RequestBody;
 
-  // The AI answer alone is a party trick; the neighbours who grow it
-  // are the product. Find gardeners within 5 km growing this plant.
-  const me = await getCurrentUser();
-  const name = result.commonName?.toLowerCase() ?? "";
-  const plant = await db.plant.findFirst({
-    where: { commonName: { contains: name.split(" ")[0] } },
-    include: { gardenPlants: { include: { user: true } } },
-  });
+    if (
+      typeof body.imageBase64 !== "string" ||
+      body.imageBase64.length === 0
+    ) {
+      return NextResponse.json(
+        {
+          error: "Image data is required.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-  const growers = (plant?.gardenPlants ?? [])
-    .filter((gp) => gp.user.id !== me.id)
-    .map((gp) => ({
-      id: gp.user.id,
-      name: gp.user.name,
-      suburb: gp.user.suburb,
-      heritage: gp.user.heritage,
-      avatarSeed: gp.user.avatarSeed,
-      quantity: gp.quantity,
-      distance: distanceKm(me.lat, me.lng, gp.user.lat, gp.user.lng),
-    }))
-    .filter((g) => g.distance <= 5)
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, 3);
+    if (
+      typeof body.mediaType !== "string" ||
+      body.mediaType.length === 0
+    ) {
+      return NextResponse.json(
+        {
+          error: "Image media type is required.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-  return NextResponse.json({ ...result, growers, matchedPlantName: plant?.commonName ?? null });
+    const result = await identify(
+      body.imageBase64,
+      body.mediaType
+    );
+
+    const me = await getCurrentUser();
+
+    const name = result.commonName
+      .toLowerCase()
+      .trim();
+
+    const firstWord =
+      name.split(/\s+/)[0];
+
+    const plant = await db.plant.findFirst({
+      where: {
+        commonName: {
+          contains: firstWord,
+        },
+      },
+      include: {
+        gardenPlants: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    // Prisma infers the type of gardenPlants
+    // from the include above.
+    const gardenPlants =
+      plant?.gardenPlants ?? [];
+
+    const growers: Grower[] = [];
+
+    for (const gardenPlant of gardenPlants) {
+      if (gardenPlant.user.id === me.id) {
+        continue;
+      }
+
+      const distance: number = distanceKm(
+        me.lat,
+        me.lng,
+        gardenPlant.user.lat,
+        gardenPlant.user.lng
+      );
+
+      if (distance > 5) {
+        continue;
+      }
+
+      growers.push({
+        id: gardenPlant.user.id,
+        name: gardenPlant.user.name,
+        suburb: gardenPlant.user.suburb,
+        heritage: gardenPlant.user.heritage,
+        avatarSeed: gardenPlant.user.avatarSeed,
+        quantity: Number(gardenPlant.quantity),
+        distance,
+      });
+    }
+
+    growers.sort(
+      (a: Grower, b: Grower): number =>
+        a.distance - b.distance
+    );
+
+    const nearestGrowers: Grower[] =
+      growers.slice(0, 3);
+
+    return NextResponse.json({
+      ...result,
+      growers: nearestGrowers,
+      matchedPlantName:
+        plant?.commonName ?? null,
+    });
+  } catch (error) {
+    console.error(
+      "Identify route error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error: "Failed to identify plant.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }
