@@ -9,6 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import { HeritageTag } from "@/components/ui/Tag";
 
 type UserProfile = {
+  id: string;
   name: string;
   suburb: string;
   heritage: string;

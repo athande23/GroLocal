@@ -15,53 +15,86 @@ export const dynamic = "force-dynamic";
 export default async function ProfilePage() {
   const me = await getCurrentUser();
 
-  const [gardenPlants, stories, following, myListings, claimedFromOthers, growLogs, plants] =
-    await Promise.all([
-      db.gardenPlant.findMany({
-        where: { userId: me.id },
-        include: { plant: true },
-      }),
-      db.story.findMany({
-        where: { userId: me.id },
-        include: { plant: true },
-        orderBy: { createdAt: "desc" },
-      }),
-      db.follow.findMany({
-        where: { followerId: me.id },
-        include: { following: true },
-      }),
-      db.listing.findMany({
-        where: { userId: me.id },
-        include: { plant: true },
-        orderBy: { createdAt: "desc" },
-      }),
-      db.listing.findMany({
-        where: {
-          claimed: true,
-          claimedById: me.id,
-        },
-        include: {
-          plant: true,
-          user: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      }),
-      db.growLog.findMany({
-        where: { userId: me.id },
-        include: { plant: true },
-        orderBy: { day: "asc" },
-      }),
-      db.plant.findMany({ orderBy: { commonName: "asc" } }),
-    ]);
+  const [
+    gardenPlants,
+    stories,
+    following,
+    myListings,
+    growLogs,
+    plants,
+  ] = await Promise.all([
+    db.gardenPlant.findMany({
+      where: {
+        userId: me.id,
+      },
+      include: {
+        plant: true,
+      },
+    }),
 
-  const cultures = [...new Set(following.map((f) => f.following.heritage))].sort();
+    db.story.findMany({
+      where: {
+        userId: me.id,
+      },
+      include: {
+        plant: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+
+    db.follow.findMany({
+      where: {
+        followerId: me.id,
+      },
+      include: {
+        following: true,
+      },
+    }),
+
+    db.listing.findMany({
+      where: {
+        userId: me.id,
+      },
+      include: {
+        plant: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+
+    db.growLog.findMany({
+      where: {
+        userId: me.id,
+      },
+      include: {
+        plant: true,
+      },
+      orderBy: {
+        day: "asc",
+      },
+    }),
+
+    db.plant.findMany({
+      orderBy: {
+        commonName: "asc",
+      },
+    }),
+  ]);
+
+  const cultures: string[] = [
+    ...new Set(
+      following.map((follow) => follow.following.heritage)
+    ),
+  ].sort();
 
   return (
     <div className="mx-auto max-w-[1080px] px-5 py-12">
       <ProfileEditor
         user={{
+          id: me.id,
           name: me.name,
           suburb: me.suburb,
           heritage: me.heritage,
@@ -72,7 +105,12 @@ export default async function ProfilePage() {
       />
 
       <MyRootsTabs
-        me={{ id: me.id, lat: me.lat, lng: me.lng }}
+        me={{
+          id: me.id,
+          lat: me.lat,
+          lng: me.lng,
+        }}
+
         gardenPlants={gardenPlants.map((gp) => ({
           id: gp.id,
           plantId: gp.plantId,
@@ -82,47 +120,57 @@ export default async function ProfilePage() {
           notes: gp.notes,
           daysToHarvest: gp.plant.daysToHarvest,
         }))}
-        stories={stories.map((s) => ({
-          id: s.id,
-          title: s.title,
-          plantName: s.plant.commonName,
-          origin: s.origin,
-          excerpt: s.body.split("\n")[0],
+
+        stories={stories.map((story) => ({
+          id: story.id,
+          title: story.title,
+          plantName: story.plant.commonName,
+          origin: story.origin,
+          excerpt: story.body.split("\n")[0],
         }))}
-        following={following.map((f) => ({
-          id: f.following.id,
-          name: f.following.name,
-          suburb: f.following.suburb,
-          heritage: f.following.heritage,
-          avatarSeed: f.following.avatarSeed,
-          distance: distanceKm(me.lat, me.lng, f.following.lat, f.following.lng),
+
+        following={following.map((follow) => ({
+          id: follow.following.id,
+          name: follow.following.name,
+          suburb: follow.following.suburb,
+          heritage: follow.following.heritage,
+          avatarSeed: follow.following.avatarSeed,
+          distance: distanceKm(
+            me.lat,
+            me.lng,
+            follow.following.lat,
+            follow.following.lng
+          ),
         }))}
-        myListings={myListings.map((l) => ({
-          id: l.id,
-          title: l.title,
-          type: l.type,
-          price: l.price,
-          quantity: l.quantity,
-          claimed: l.claimed,
-          plantName: l.plant?.commonName ?? l.category,
+
+        myListings={myListings.map((listing) => ({
+          id: listing.id,
+          title: listing.title,
+          type: listing.type,
+          price: listing.price,
+          quantity: listing.quantity,
+          claimed: listing.claimed,
+          plantName:
+            listing.plant?.commonName ?? listing.category,
         }))}
-        claimedListings={claimedFromOthers.map((l) => ({
-          id: l.id,
-          title: l.title,
-          gardenerName: l.user.name,
-          suburb: l.user.suburb,
-          plantName: l.plant?.commonName ?? l.category,
+
+        claimedListings={[]}
+
+        growLogs={growLogs.map((growLog) => ({
+          id: growLog.id,
+          day: growLog.day,
+          note: growLog.note,
+          plantId: growLog.plantId,
+          plantName: growLog.plant.commonName,
+          daysToHarvest: growLog.plant.daysToHarvest,
         }))}
-        growLogs={growLogs.map((gl) => ({
-          id: gl.id,
-          day: gl.day,
-          note: gl.note,
-          plantId: gl.plantId,
-          plantName: gl.plant.commonName,
-          daysToHarvest: gl.plant.daysToHarvest,
-        }))}
+
         cultures={cultures}
-        allPlants={plants.map((p) => ({ id: p.id, name: p.commonName }))}
+
+        allPlants={plants.map((plant) => ({
+          id: plant.id,
+          name: plant.commonName,
+        }))}
       />
     </div>
   );
